@@ -2,7 +2,7 @@
 Name : Automatic Database Backup
 Author : burakustuner
 Date : 01.11.2022
-Description : This script can be used to create daily&monthly backups of database and check&remove old backups.
+Description : This script can be used to create daily&monthly backups of database and check&remove old backup files.
 """
 
 import os
@@ -12,9 +12,18 @@ from datetime import date
 
 #----------------------------------------------------Giriş----------------------------------------------------------------------#
 gunsayisi = 30 # Kaç gün önceki yedekler silinecek.
-dizin = 'C:/Users/burak/Desktop/BOTAS/db_backup/gunluk_yedek' # Günlük Yedeklerin oluşturulacağı ve taranacağı dizin.
+#DB bağlantı bilgileri
+host="localhost"
+port="5432"
+username="postgres"
+password="password"
+blobs="test"
+
+script_path=(os.path.dirname(os.path.realpath(__file__)))
+dizin = script_path+'/gunluk_yedek' #'C:/path/vt_yedek/gunluk_yedek' # Günlük Yedeklerin oluşturulacağı ve taranacağı dizin. Varsayılan olarak scriptin olduğu klasörden çalışır.
+
 #-------------------------------------------------------------------------------------------------------------------------------#
-rapor=dizin+"/rapor.txt"
+rapor=os.path.abspath(os.path.join(dizin, os.pardir))+"/rapor.txt"
 def cleanBackupFolder():
     for root,_,files in os.walk(dizin):
         for f in files:            
@@ -26,12 +35,12 @@ def cleanBackupFolder():
                     try:
                         os.remove(dosyayolu)
                         print("Silinen dosya:", dosya_adi)
-                        f = open(rapor, "a+")
+                        f = open(rapor, "a+", encoding="utf-8")
                         f.write(str(dosyayolu)+"silindi.\n")
                         f.close()                        
                     except:
                         print("HATA->Dosya silinemedi:", dosya_adi)
-                        f = open(rapor, "a+")
+                        f = open(rapor, "a+", encoding="utf-8")
                         f.write("HATA dosya silinemedi ! ->" + str(dosyayolu)+"\n")
                         f.close()   
                 else:
@@ -42,9 +51,10 @@ def backupDatabase():
     dosya_adi =tarih + '.backup'
     try:
         print("Günlük yedekleme başladı.")
-        os.system('pg_dump --file '+dosya_adi+' --host localhost --port "5432" --username "postgres" --no-password --verbose --format=c --blobs "botas_vt" ')
+        os.chdir(dizin)
+        os.system('SET PGPASSWORD='+password+'&pg_dump --file '+dosya_adi+' --host '+host+' --port '+port+' --username '+username+' --no-password --verbose --format=c --blobs '+blobs)
         print("Günlük yedekleme tamamlandı.")
-        f = open(rapor, "a+")
+        f = open(rapor, "a+", encoding="utf-8")
         f.write(str(dosya_adi)+" "+ "Günlük Yedekleme Başarılı\n")
         f.close()          
         if date.today().strftime("%d")=="01":
@@ -53,17 +63,18 @@ def backupDatabase():
                 hedef =os.path.abspath(os.path.join(dizin, os.pardir))+"/aylik_yedek/"+dosya_adi
                 shutil.copyfile(kaynak, hedef)
                 print("Aylık yedekleme yapıldı.")
-                f = open(rapor, "a+")
+                f = open(rapor, "a+", encoding="utf-8")
                 f.write(str(dosya_adi)+" "+ "Aylık Yedekleme Başarılı\n")
                 f.close()
             except:
                 print("Aylık yedekleme yapılamadı.")
-                f = open(rapor, "a+")
+                f = open(rapor, "a+", encoding="utf-8")
                 f.write("Hata ->"+str(dosya_adi)+" "+ "Aylık Yedekleme Başarısız\n")
                 f.close()
     except:
         print("HATA->Yedekleme başarısız.")
-        f = open(rapor, "a+")
+        os.chdir(path)
+        f = open(rapor, "a+", encoding="utf-8")
         f.write("Hata ->"+str(dosya_adi)+" "+ "Günlük Yedekleme Başarısız !!\n")
         f.close()    
 
