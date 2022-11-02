@@ -13,11 +13,11 @@ from datetime import date
 #----------------------------------------------------Giriş----------------------------------------------------------------------#
 gunsayisi = 30 # Kaç gün önceki yedekler silinecek.
 #DB bağlantı bilgileri
-host="localhost"
+host="1.1.1.1"
 port="5432"
 username="postgres"
 password="password"
-blobs="test"
+database="test"
 
 script_path=(os.path.dirname(os.path.realpath(__file__)))
 dizin = script_path+'/gunluk_yedek' #'C:/path/vt_yedek/gunluk_yedek' # Günlük Yedeklerin oluşturulacağı ve taranacağı dizin. Varsayılan olarak scriptin olduğu klasörden çalışır.
@@ -52,7 +52,7 @@ def backupDatabase():
     try:
         print("Günlük yedekleme başladı.")
         os.chdir(dizin)
-        os.system('SET PGPASSWORD='+password+'&pg_dump --file '+dosya_adi+' --host '+host+' --port '+port+' --username '+username+' --no-password --verbose --format=c --blobs '+blobs)
+        os.system('SET PGPASSWORD='+password+'&pg_dump --file '+dosya_adi+' --host '+host+' --port '+port+' --username '+username+' --no-password --verbose --format=c --blobs '+database)
         print("Günlük yedekleme tamamlandı.")
         f = open(rapor, "a+", encoding="utf-8")
         f.write(str(dosya_adi)+" "+ "Günlük Yedekleme Başarılı\n")
@@ -73,7 +73,7 @@ def backupDatabase():
                 f.close()
     except:
         print("HATA->Yedekleme başarısız.")
-        os.chdir(path)
+        os.chdir(dizin)
         f = open(rapor, "a+", encoding="utf-8")
         f.write("Hata ->"+str(dosya_adi)+" "+ "Günlük Yedekleme Başarısız !!\n")
         f.close()    
